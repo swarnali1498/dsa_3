@@ -3,6 +3,9 @@
 #include<fstream>
 #include<algorithm>
 #include<cstring>
+#include<filesystem>
+#include<time.h>
+#include<climits>
 using namespace std;
 
 class node
@@ -61,12 +64,7 @@ class minHeap
 	}
 	node extract_min()
 	{
-		node t=heap[0];
-		heap[0]=heap[s-1];
-		heap[s-1]=t;
-		s--;
-		min_heapify(0);
-		return t;
+		return heap[0];
 	}
 	void replace_min(node nn)
 	{
@@ -79,22 +77,34 @@ class minHeap
 
 int main(int argc,char* argv[])
 {
-	FILE* fin;
+	clock_t start, end;
+	double cpu_time_used;
+     
+        start = clock();
+        FILE* fin;
 	char* in=argv[1];
  	fin=fopen(in,"r");
  	char ch;
- 	long long int i,j;
- 	long long int temp_filesize=200;
- 	vector<long long int> temp(temp_filesize);
+ 	long long int i,j=0;
+ 	long long int temp_filesize=1000000;
+ 	vector<long long int> temp;
  	vector<char*> out;
- 	while(fin)
+ 	int f=0;
+ 	while(!f)
     	{
-    		while(temp.size()<200 && fin)
+    		while(temp.size()<temp_filesize && !f)
     		{
     			long long int number;
- 			fscanf(fin,"%lld,",&number);
+ 			if(fscanf(fin,"%lld,",&number)!=1)
+ 			{
+ 				f=1;
+ 				break;
+ 			}
  			temp.push_back(number);
+ 			//cout<<number<<" ";
  		}
+ 		if(f && temp.size()==0)
+ 		break;
  		sort(temp.begin(),temp.end());
  		FILE* tempfile;
  		string fname=to_string(j);
@@ -108,6 +118,7 @@ int main(int argc,char* argv[])
  		out.push_back(fn);
  		j++;
  		fclose(tempfile);
+ 		temp.clear();
  	}
  	
  	long long int k=out.size();
@@ -118,6 +129,7 @@ int main(int argc,char* argv[])
  		if(fp)
  		file_pointer[i]=fp;
  	}
+ 	//cout<<out.size()<<endl;
  	FILE* output;
  	output=fopen(argv[2],"w");
  	vector<node> heap(out.size());
@@ -130,19 +142,33 @@ int main(int argc,char* argv[])
  		i++;
  	}
  	minHeap hp(heap,out.size());
+ 	/*for(auto itr:heap)
+ 	{
+ 		cout<<itr.index<<" "<<itr.data<<endl;
+ 	}*/
  	long long int count=0;
  	while(count!=out.size())
  	{
+ 		cout<<count<<" "<<out.size()<<endl;
  		node min=hp.extract_min();
+ 		cout<<"Min="<<min.data<<" "<<min.index<<endl; 
  		fprintf(output, "%lld,", min.data);
  		node nn(0,min.index); 
  		if (fscanf(file_pointer[min.index], "%lld,",&nn.data)!= 1) 
  		{
             		count++;
+            		nn.data=INT_MAX;
         	}
-        	else
-        		hp.replace_min(nn);
+        	//cout<<"Adding "<<nn.data<<" "<<nn.index<<endl;
+        	hp.replace_min(nn);
+ 	}
+ 	for(i=0;i<out.size();i++)
+ 	{
+ 		remove(out[i]);
  	}
  	fclose(fin);
  	fclose(output);
+ 	end = clock();
+        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	cout<<"TIME REQUIRED="<<cpu_time_used<<endl;
 }
